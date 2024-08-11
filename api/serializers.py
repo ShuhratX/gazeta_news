@@ -9,17 +9,17 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class ArticleSerializer(serializers.ModelSerializer):
+
     category = CategorySerializer(read_only=True)
 
     class Meta:
         model = Article
-        fields = ['id', 'title', 'content', 'link', 'pub_date', 'category']
+        fields = ['id', 'title', 'content', 'link', 'pub_date', 'category', 'created_date']
 
-    def create(self, validated_data):
-
+    def validate(self, data):
         # Ma'lumot qatorining mavjudligini tekshirish
-        if Article.objects.filter(title=self.validated_data['title']).first():
-            return None
-        else:
-            # Agar mavjud bo'lmasa, yangi qator yaratamiz
-            return super().create(validated_data)
+        if Article.objects.filter(title=data['title']).exists():
+
+            raise serializers.ValidationError("Ushbu maqola ma'lumotlar bazasida mavjud.")
+        return data
+
