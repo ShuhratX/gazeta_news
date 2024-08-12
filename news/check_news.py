@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 
+from typing import Any
+
 
 def fetch_news():
     with requests.Session() as se:
@@ -12,42 +14,40 @@ def fetch_news():
             "Accept-Language": "ru,en;q=0.9,uz;q=0.8,tg;q=0.7"
         }
 
-    gazeta = 'https://www.gazeta.uz/' #asosiy sayt linki
+    gazeta: str = 'https://www.gazeta.uz/' #asosiy sayt linki,  Pythonda type larni qo'llash uchun namuna
     response = se.get(f"{gazeta}oz/list/news/") #yangiliklar uchun link
     soup = BeautifulSoup(response.content, 'html.parser')
-    articles = soup.find_all("div", {"class": "nblock"}, limit=10) #Oxirgi 10 ta yangiliklarni ajratish
-
+    articles: Any = soup.find_all("div", {"class": "nblock"}, limit=11) #Oxirgi 10 ta yangiliklarni ajratish
+    article_list = []
     for article in articles:
         title = article.find("h3").get_text() #Maqola sarlavhasini ajratib olish
-        print(title)
         content = article.find_all("a")[1].get("href") #Maqolaga kirish uchun linkni ajratib olish
-        print(content)
         soup2 = BeautifulSoup(se.get(f"{gazeta}{content}").content, 'html.parser')
-        # print(soup2,  "\n\n\n")
         content_top = soup2.find('h4').get_text()
-        content_bottom = ''
         parags = soup2.find('div', {"itemprop": "articleBody"}).find_all("p")
         for prg in parags:
             if '"Gazeta.uz"da reklama' not in prg.get_text():
                 content_top += prg.get_text()
             else:
                 content_top += prg.get_text()[:-22]
-        print("\n", content_top) #Maqola matnini olish
 
         category = soup2.find('span', {"itemprop": "name"}).get_text() #Maqoladan kategoriyasini olish
-        print(category)
 
-        for_manbaa = soup2.find("a", {"rel": "noopener noreferrer"})
-        manbaa = ''
-        if for_manbaa:
-            manbaa = for_manbaa.get("href") #Maqolaga manbaani olish
+        sources = soup2.find("a", {"rel": "noopener noreferrer"})
+
+        if sources:
+            link = sources.get("href") #Maqolaga manbasini olish
         else:
-            manbaa = "Bu maqolada manbaa keltirilmagan"
-        print(manbaa)
+            link = "Bu maqolada manba keltirilmagan"
 
-        date_pub = content[4:14] #Maqola joylangan sana ma'lumotini olish
-        print(date_pub, "\n\n\n")
+        pub_date = content[4:14] #Maqola joylangan sana ma'lumotini olish
 
-    return "news_list"
+        article_list.append({
+            'title': title,
+            'content': content_top,
+            'category': category,
+            'link': link,
+            'pub_date': pub_date
+        })
+    return article_list
 
-news = fetch_news()
