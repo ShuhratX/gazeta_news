@@ -8,9 +8,18 @@ from api.serializers import ArticleSerializer
 from news.check_news import fetch_news
 
 
-class ArticlesCreateView(generics.CreateAPIView):
+class ArticlesView(generics.GenericAPIView):
+
     serializer_class = ArticleSerializer
     queryset = Article.objects.all()
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['category',]
+
+    def get(self, request):
+        qst = self.get_queryset()
+        qst = self.filter_queryset(qst)
+        serializer = self.get_serializer(instance=qst, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
         articles = fetch_news()
@@ -29,16 +38,17 @@ class ArticlesCreateView(generics.CreateAPIView):
         return Response({"message": "Yangi maqolalar topilmadi."}, status=status.HTTP_200_OK)
 
 
-
-class ArticlesListView(generics.ListAPIView):
+class ArticleDetailView(generics.RetrieveAPIView):
 
     serializer_class = ArticleSerializer
     queryset = Article.objects.all()
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['category',]
 
 
-class ArticleDetailView(generics.RetrieveAPIView):
+class ArticleUpdateView(generics.RetrieveUpdateAPIView):
+    serializer_class = ArticleSerializer
+    queryset = Article.objects.all()
 
+
+class ArticleDeleteView(generics.DestroyAPIView):
     serializer_class = ArticleSerializer
     queryset = Article.objects.all()
