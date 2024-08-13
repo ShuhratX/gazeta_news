@@ -3,16 +3,18 @@ import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.utils import executor
+from environs import Env
 
 from news.check_news import fetch_news
-
-API_TOKEN = '7336413831:AAHMdJXF81dPh954B_HfeQVWH-CAQUfVNJI'
+env = Env()
+env.read_env()
+BOT_TOKEN = env.str("BOT_TOKEN")
 
 # Loggingni sozlash
 logging.basicConfig(level=logging.INFO)
 
 # Bot va Dispatcher ni yaratish
-bot = Bot(token=API_TOKEN)
+bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
 
 # Middlewares
